@@ -1,0 +1,2 @@
+bootargs=console=ttyO0,115200 debug earlycon rdinit=/sbin/init
+uenvcmd=fatload mmc 0:1 80200000 zImage;fatload mmc 0:1 80f00000 am335x-boneblack.dtb;fatload mmc 0:1 0x81000000 uRamdisk;bootz 80200000 81000000  80f00000
