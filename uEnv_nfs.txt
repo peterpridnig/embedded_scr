@@ -1,0 +1,5 @@
+serverip=10.0.0.18
+ipaddr=10.0.0.117
+npath=/home/peter/mastering_beaglebone/userland/rootfs_nfs
+bootargs=console=ttyO0,115200 root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,v3 ip=${ipaddr}
+uenvcmd=fatload mmc 0:1 80200000 zImage;fatload mmc 0:1 80f00000 am335x-boneblack.dtb;bootz 80200000 - 80f00000

@@ -1,5 +1,9 @@
+# pridnig, 22.8.2023
 
-#toolchain
+
+# #######################
+# ## toolchain
+# ######################
 
 https://crosstool-ng.github.io
 git clone https://github.com/crosstool-ng/crosstool-ng.git
@@ -7,37 +11,26 @@ cd crosstool-ng
 git branch
 
 *master
-
 ./bootstratp
-
 ./configure –prefix=${PWD}
-
 make
-
 make install
 
- 
 
 bin/ct-ng
-
 bin/ct-ng list-samples
-
 bin/ct-ng show-arm-cortex_a8-linux-gnueabi
 
- 
+
 
 bin/ct-ng arm-cortex_a8-linux-gnueabi
-
 bin/ct-ng menuconfig
 
  
 
 Paths and misc options: disable Render the toolchain read-only
-
 Target options / Floating point: hardware (FPU)
-
 Target optinos: Use specific FPU=neon
-
  
 
 bin/ct-ng build
@@ -46,17 +39,16 @@ bin/ct-ng build
 
  ~/x-tools/arm-cortex_a8-linux-gnueabhif
 
- 
 
 arm-cortex_a8-linux-gnueabhif-gcc --version
-
 arm-cortex_a8-linux-gnueabhif-gcc -print-sysroot
 
  
 
  
-
-# u-boot
+# ################
+# ## u-boot
+# ################
 
 git clone git://git.denx.de/u-boot.git
 cd u-boot
@@ -75,13 +67,21 @@ cp MLO u-boot.img /media/peter/boot
 
  
 
-gtkterm -p /dev/ttyUSB0 -s 115200
+gtkterm -p /dev/ttyUSB0 -s 115200 &
 
 
+uEnv.txt
+https://github.com/linux-sunxi/u-boot-sunxi/issues/28
+
+env default -f -a
+saveenv
+reset
 
 
+# ################
+# ## kernel linux 5.15.126
+# ################
 
-# kernel linux 5.15.126
 make ARCH=arm CROSS_Compile=arm-unknown-linux-gnueabi- mrproper
 make ARCH=arm multi_v7_defconfig
 make menuconfig
@@ -97,15 +97,22 @@ arch/arm/boot/dts/am335x-boneblack.dtb
 => zImage am335x-boneblack.dtb
 
 
-# rootfs
+
+# ##################
+# ## rootfs
+# ##################
 
 sudo chown -R root:root *
 
-## busybox
+# ---------------------
+# --  busybox
+# ---------------------
 
 no ssh client: dropbear
 
-## ramdisk
+# ---------------------
+# -- ramdisk
+# ---------------------
 
 gen_ramdisk.sh
 => uRamdisk
@@ -125,7 +132,10 @@ ifconfig
 ifconfig lo
 ifconfig eth0 10.0.0.117
 
-## rootfs
+
+# ---------------------
+# -- rootfs mount from sdcard
+# ---------------------
 
 device-table.txt
 /dev d 755 0 0 - - - - -
@@ -153,6 +163,10 @@ bootz 0x80200000 - 0x80f00000
 -rwxr-xr-x  1 root root 9990656 Aug 12 15:24 zImage
 
 
+# ---------------------
+# -- fstab
+# ---------------------
+
 /dev/sdb1 on /media/peter/11WATT_0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
 /dev/sdc2 on /media/peter/STORAGE_Volume_11WATT type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
 /dev/sda4 on /media/peter/11WATT_SSD0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
@@ -169,3 +183,34 @@ bootz 0x80200000 - 0x80f00000
 UUID=662872F92872C817 /mnt/backup_0.5t ntfs
 UUID=96604E02604DE997 /mnt/storage_1.0t ntfs
 UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
+
+
+# ---------------------
+# -- rootfs mount via NFS
+# ---------------------
+
+/etc/exports
+ /home/peter/mastering_beaglebone/userland/rootfs_nfs *(rw,sync,no_subtree_check,no_root_squash)
+
+
+https://linuxways.net/mint/how-to-configure-nfs-server-and-client-on-linux-mint-20/
+
+dpkg -l | grep nfs-kernel-server
+sudo exportfs -av
+sudo systemctl restart nfs-kernel-server
+sudo systemctl status nfs-kernel-server
+
+sudo ufw status
+
+sudo chown -R 0:0 *
+
+setenv serverip 10.0.0.18
+setenv ipaddr 10.0.0.117
+setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
+setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,vers=3 ip=${ipaddr}
+fatload mmc 0:1 0x80200000 zImage
+fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
+bootz 0x80200000 - 0x80f00000
+
+root=/dev/nfs rw nfsroot=10.0.0.18:/home/peter/mastering_beaglebone/userland/rootfs_nfs ip=10.0.0.117
+
