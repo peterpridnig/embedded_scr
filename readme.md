@@ -74,8 +74,11 @@ uEnv.txt
 https://github.com/linux-sunxi/u-boot-sunxi/issues/28
 
 env default -f -a
+print bootcmd
+setenv botcmd cmd1\;cmd2
 saveenv
 reset
+
 
 
 # ################
@@ -212,5 +215,30 @@ fatload mmc 0:1 0x80200000 zImage
 fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
 bootz 0x80200000 - 0x80f00000
 
-root=/dev/nfs rw nfsroot=10.0.0.18:/home/peter/mastering_beaglebone/userland/rootfs_nfs ip=10.0.0.117
+setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
 
+
+# ---------------------
+# -- tftp to load the kernel
+# ---------------------
+
+sudo apt install tftpd-hpa
+
+more /etc/default/tftpd-hpa 
+ TFTP_USERNAME="tftp"
+ TFTP_DIRECTORY="/var/lib/tftpboot"
+ TFTP_ADDRESS=":69"
+ TFTP_OPTIONS="--secure"
+
+/var/lib/tftpboot
+cp arch/arm/boot/zImage /var/lib/tftpboot
+cp arch/arm/boot/dts/am335x-boneblack.dtb /var/lib/tftpboot
+
+/etc/init.d/tftpd-hpa restart
+
+setenv serverip 10.0.0.18
+setenv ipaddr 10.0.0.117
+setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
+setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,vers=3 ip=${ipaddr}
+
+setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
