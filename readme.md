@@ -2,7 +2,7 @@
 
 
 # #######################
-# ## toolchain
+# ## toolchain "master" -> remotes/origin.1.25
 # ######################
 
 https://crosstool-ng.github.io
@@ -11,7 +11,7 @@ cd crosstool-ng
 git branch
 
 *master
-./bootstratp
+./bootstrap
 ./configure –prefix=${PWD}
 make
 make install
@@ -20,25 +20,17 @@ make install
 bin/ct-ng
 bin/ct-ng list-samples
 bin/ct-ng show-arm-cortex_a8-linux-gnueabi
-
-
+bin/ct-ng distclean
 
 bin/ct-ng arm-cortex_a8-linux-gnueabi
 bin/ct-ng menuconfig
-
- 
-
-Paths and misc options: disable Render the toolchain read-only
-Target options / Floating point: hardware (FPU)
-Target optinos: Use specific FPU=neon
- 
+ Paths and misc options: disable Render the toolchain read-only
+ Target options / Floating point: hardware (FPU)
+ Target optinos: Use specific FPU=neon
 
 bin/ct-ng build
 
- 
-
- ~/x-tools/arm-cortex_a8-linux-gnueabhif
-
+=>  ~/x-tools/arm-cortex_a8-linux-gnueabhif
 
 arm-cortex_a8-linux-gnueabhif-gcc --version
 arm-cortex_a8-linux-gnueabhif-gcc -print-sysroot
@@ -47,7 +39,7 @@ arm-cortex_a8-linux-gnueabhif-gcc -print-sysroot
 
  
 # ################
-# ## u-boot
+# ## u-boot "2023.07.02"
 # ################
 
 git clone git://git.denx.de/u-boot.git
@@ -55,7 +47,11 @@ cd u-boot
 git branch
 master *
 
+git checkout v2023.07.02
+git checkout -b v2023.07.02.myuboot
+
 make am335x_evm_defconfig
+make menuconfig
 make
 => MLO u-boot.img
 
@@ -65,13 +61,10 @@ u-boot/include/environment/ti/mmc.h
 sh $MELP/format-sdcard.sh
 cp MLO u-boot.img /media/peter/boot
 
- 
+
 
 gtkterm -p /dev/ttyUSB0 -s 115200 &
 
-
-uEnv.txt
-https://github.com/linux-sunxi/u-boot-sunxi/issues/28
 
 env default -f -a
 print bootcmd
@@ -79,6 +72,7 @@ setenv botcmd cmd1\;cmd2
 saveenv
 reset
 
+U-Boot 2023.07.02-00001-g17c4ea4e9b (Aug 26 2023 - 15:57:19 +0200)
 
 
 # ################
@@ -108,10 +102,70 @@ arch/arm/boot/dts/am335x-boneblack.dtb
 sudo chown -R root:root *
 
 # ---------------------
-# --  busybox
+# --  busybox "1_36_stable"
+# ---------------------
+https://busybox.net/tinyutils.html
+
+
+# ---------------------
+# --  dropbear "2022_83"
 # ---------------------
 
+https://matt.ucc.asn.au/dropbear/
+
+tar xjf 
+
 no ssh client: dropbear
+
+new terminal, fresh "CC"
+cd dropbear
+./configure --help
+./configure --enable-static --disable-zlib --prefix=/home/peter/mastering_beaglebone/userland/dropbear_staging
+source set_env.sh
+make
+make install
+
+
+
+https://gist.github.com/mad4j/7983719
+
+Manual installation
+1. copy dropbearmultin in /usr/sbin
+2. create dropbearmulti aliases (call ./dropbearmulti)
+
+  Dropbear multi-purpose version 0.51
+  Make a symlink pointing at this binary with one of the following names:
+  'dropbear' - the Dropbear server
+  'dbclient' or 'ssh' - the Dropbear client
+  'dropbearkey' - the key generator
+  'dropbearconvert' - the key converter
+  'scp' - secure copy
+
+Note: scp mayby needed to be created in /usr/bin
+
+  ln -s /usr/sbin/dropbearmulti /usr/bin/scp
+
+3. create rsa keys in /etc/dropbear (e.g. /etc/dropbear/dropbear_rsa_host_key)
+
+  mkdir -p /etc/dropbear
+  dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+  dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+  dropbearkey -t ecdsa -f /etc/dropbear/dropbear_ecdsa_host_key
+  dropbearkey -t ed25519 -f /etc/dropbear/dropbear_ed25519_host_key
+
+if needed create /dev/random device
+1. mknod -m 644 /dev/random c 1 8
+2. mknod -m 644 /dev/urandom c 1 9
+3. chown root:root /dev/random /dev/urandom
+
+Running dropbear server in foreground (on default port)
+./dropbear
+
+Note: use -E option to log on sdterr
+
+
+dropbear -E
+./dropbear -E -p 1973
 
 # ---------------------
 # -- ramdisk
@@ -242,3 +296,17 @@ setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
 setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,vers=3 ip=${ipaddr}
 
 setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
+
+
+# ################
+# ## buildroot "2023.02.3"
+# ################
+
+https://buildroot.org/download.html
+
+git clone git://git.buildroot.net/buildroot
+git checkout -b 2023.02.3.mybuildroot
+
+make list-defconfigs
+
+
