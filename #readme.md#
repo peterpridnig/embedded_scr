@@ -113,6 +113,8 @@ https://busybox.net/tinyutils.html
 
 https://matt.ucc.asn.au/dropbear/
 
+wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2020.80.tar.bz2
+
 tar xjf 
 
 no ssh client: dropbear
