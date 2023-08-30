@@ -100,6 +100,8 @@ arch/arm/boot/dts/am335x-boneblack.dtb
 # ##################
 
 sudo chown -R root:root *
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
 
 # ---------------------
 # --  busybox "1_36_stable"
@@ -112,19 +114,23 @@ https://busybox.net/tinyutils.html
 # ---------------------
 
 https://matt.ucc.asn.au/dropbear/
+wget https://matt.ucc.asn.au/dropbear/releases/
 
 tar xjf 
 
-no ssh client: dropbear
-
 new terminal, fresh "CC"
 cd dropbear
+
+localoptions.h:
+ #if !HAVE_CRYPT
+ #define DROPBEAR_SVR_PASSWORD_AUTH 0
+ #endif
+ 
 ./configure --help
-./configure --enable-static --disable-zlib --prefix=/home/peter/mastering_beaglebone/userland/dropbear_staging --host=arm-cortex_a8-linux-gnueabihf
 source set_env.sh
+./configure --enable-static --disable-zlib --prefix=/home/peter/mastering_beaglebone/userland/dropbear_staging --host=arm-cortex_a8-linux-gnueabihf
 make
 make install
-
 
 
 https://gist.github.com/mad4j/7983719
@@ -163,9 +169,23 @@ Running dropbear server in foreground (on default port)
 
 Note: use -E option to log on sdterr
 
+/etc/init.d/rcS
+dropbear -R -E -b dropbear -R -b /etc/dropbear/dropbear.banner
 
-dropbear -E
-./dropbear -E -p 1973
+client
+ssh-keygen -f ~/id_rsa -t rsa
+ssh-copy-id -f -i ~/.ssh/id_rsa.pub peter@10.0.0.117
+https://wiki.termux.com/wiki/Remote_Access
+
+server:
+~/.ssh # more authorized_keys 
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFdNJP5jvQz83BHerNXup6ReYeIGoQnKyaYGdxfcnw6EYOhNUky+y0jZzkXgHQBbYKld2JgexmE8blGjaMz09bFi/Jao/lj/MjwTnkYSmhJQHUqf1HwM8AgFPRtlcTcwzfQghL36Ksww//6KhSugRt0vSMF4hvwPSH+iZHpNIjzZPBSqPzzxKBy/yTyl9fi3hqwG7SXN0tKEHyUz82m0nxzj64/gAyX1fv59eJq0KgUsZN3b0i8VnwUyfaRrQWEJkw567cWtp0B0HXPEnFimOpKTW9Rmp4yC7+FMjQEhWf+zWhrB2+JHtzW8pGgkgl9iwwN2KmcvbR1WGDtOfUOumf peter@elvwatt
+
+
+ssh 10.0.0.117 -l peter
+
+
+pkill dropbear
 
 # ---------------------
 # -- ramdisk
@@ -201,14 +221,14 @@ device-table.txt
 /dev/ttyO0 c 600 0 0 252 0 0 0 -
 
 genext2fs -b 4096 -d rootfs_staging -D device-table.txt -U rootfs.ext2
+e2fsck rootfs.ext2
 sudo dd if=rootfs.ext2 of=/dev/sdh2
 
 fatload mmc 0:1 0x80200000 zImage
 fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
-setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/mmcblk0p2
-                                                    root=/dev/mmcblk0p2 rw rootfstype=ext2 rootwait
-						    root=/dev/mmcblk1p1 ro 
+setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/mmcblk0p2 rw rootfstype=ext2 rootwait
 bootz 0x80200000 - 0x80f00000
+
 
 
 /dev/mmcblk0p1
