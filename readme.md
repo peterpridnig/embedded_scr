@@ -44,27 +44,66 @@ arm-cortex_a8-linux-gnueabhif-gcc -print-sysroot
 
 git clone git://git.denx.de/u-boot.git
 cd u-boot
+
 git branch
-master *
+master
+* v2023.07.02.myuboot
 
 git checkout v2023.07.02
 git checkout -b v2023.07.02.myuboot
 
+
+# ---------------------
+# -- EVM board
+# ---------------------
+
+./board/ti/am335x
+./configs/am335x_evm_defconfig
+
 make am335x_evm_defconfig
 make menuconfig
+.config.20230831
+
 make
 => MLO u-boot.img
-
-u-boot/include/environment/ti/mmc.h
-
 
 sh $MELP/format-sdcard.sh
 cp MLO u-boot.img /media/peter/boot
 
 
+# ---------------------
+# --  NOVA board
+# ---------------------
+
+p. 168
+git status
+On branch v2023.07.02.myuboot
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   arch/arm/Kconfig
+	modified:   arch/arm/mach-omap2/am33xx/Kconfig
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	arch/arm/dts/nova.dts
+	board/ti/nova/
+	configs/nova_defconfig
+	include/configs/nova.h
+
+
+
+./arch/arm/dts/am335x-boneblack.dts
+make distclean
+make nova_defconfig
+
+# ---------------------
+# -- u-boot commandline
+# ---------------------
 
 gtkterm -p /dev/ttyUSB0 -s 115200 &
-
 
 env default -f -a
 print bootcmd
@@ -79,10 +118,12 @@ U-Boot 2023.07.02-00001-g17c4ea4e9b (Aug 26 2023 - 15:57:19 +0200)
 # ## kernel linux 5.15.126
 # ################
 
-make ARCH=arm CROSS_Compile=arm-unknown-linux-gnueabi- mrproper
+make ARCH=arm CROSS_COMPILE=arm-unknown-linux-gnueabi- mrproper
 make ARCH=arm multi_v7_defconfig
 make menuconfig
-cp .config ...
+
+.config.20230831 includes /sys/class/gpio
+
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- zImage
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- modules
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- dtbs
@@ -91,8 +132,30 @@ make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- dtbs
 arch/arm/boot/zImage
 arch/arm/boot/dts/am335x-boneblack.dtb
 
-=> zImage am335x-boneblack.dtb
+# ---------------------
+# -- tftp to load the kernel
+# ---------------------
 
+sudo apt install tftpd-hpa
+
+more /etc/default/tftpd-hpa 
+ TFTP_USERNAME="tftp"
+ TFTP_DIRECTORY="/var/lib/tftpboot"
+ TFTP_ADDRESS=":69"
+ TFTP_OPTIONS="--secure"
+
+/var/lib/tftpboot
+cp arch/arm/boot/zImage /var/lib/tftpboot
+cp arch/arm/boot/dts/am335x-boneblack.dtb /var/lib/tftpboot
+
+/etc/init.d/tftpd-hpa restart
+
+setenv serverip 10.0.0.18
+setenv ipaddr 10.0.0.117
+setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
+setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,vers=3 ip=${ipaddr}
+
+setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
 
 
 # ##################
@@ -269,7 +332,6 @@ UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
 /etc/exports
  /home/peter/mastering_beaglebone/userland/rootfs_nfs *(rw,sync,no_subtree_check,no_root_squash)
 
-
 https://linuxways.net/mint/how-to-configure-nfs-server-and-client-on-linux-mint-20/
 
 dpkg -l | grep nfs-kernel-server
@@ -292,35 +354,19 @@ bootz 0x80200000 - 0x80f00000
 setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
 
 
-# ---------------------
-# -- tftp to load the kernel
-# ---------------------
 
-sudo apt install tftpd-hpa
 
-more /etc/default/tftpd-hpa 
- TFTP_USERNAME="tftp"
- TFTP_DIRECTORY="/var/lib/tftpboot"
- TFTP_ADDRESS=":69"
- TFTP_OPTIONS="--secure"
+# ################
+# ## gpio
+# ################
 
-/var/lib/tftpboot
-cp arch/arm/boot/zImage /var/lib/tftpboot
-cp arch/arm/boot/dts/am335x-boneblack.dtb /var/lib/tftpboot
-
-/etc/init.d/tftpd-hpa restart
-
-setenv serverip 10.0.0.18
-setenv ipaddr 10.0.0.117
-setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
-setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${serverip}:${npath},tcp,vers=3 ip=${ipaddr}
-
-setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
-
+p. 641
+/sys/class
 
 # ################
 # ## buildroot "2023.02.3"
 # ################
+
 
 https://buildroot.org/download.html
 
