@@ -1,6 +1,32 @@
 # pridnig, 22.8.2023
 
 
+# ---------------------
+# -- fstab
+# ---------------------
+
+/dev/sdb1 on /media/peter/11WATT_0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
+/dev/sdc2 on /media/peter/STORAGE_Volume_11WATT type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
+/dev/sda4 on /media/peter/11WATT_SSD0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
+
+/dev/sdb1: LABEL="11WATT_0.5T" UUID="662872F92872C817" TYPE="ntfs" PARTUUID="0512b30a-01"
+/dev/sdc2: LABEL="STORAGE_Volume_11WATT" UUID="96604E02604DE997" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="5bd3007e-e68d-4eb0-a795-1fa2bcdc0a20"
+/dev/sda4: LABEL="11WATT_SSD0.5T" UUID="D2CA0BF4CA0BD39F" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="89a179fc-ca6b-468b-a2e9-63a04f4a2b57"
+
+/dev/sdb1: /mnt/backup_0.5t  UUID=662872F92872C817 ntfs
+/dev/sdc2: /mnt/storage_1.0t" UUID=96604E02604DE997 "ntfs
+/dev/sda4: /mnt/win_ssd0.5t" UUID=D2CA0BF4CA0BD39F ntfs
+
+/etc/fstab
+UUID=662872F92872C817 /mnt/backup_0.5t ntfs
+UUID=96604E02604DE997 /mnt/storage_1.0t ntfs
+UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
+
+
+
+
+
+
 # #######################
 # ## toolchain "master" -> remotes/origin.1.25
 # ######################
@@ -64,12 +90,6 @@ make am335x_evm_defconfig
 make menuconfig
 .config.20230831
 
-make
-=> MLO u-boot.img
-
-sh $MELP/format-sdcard.sh
-cp MLO u-boot.img /media/peter/boot
-
 
 # ---------------------
 # --  NOVA board
@@ -88,16 +108,26 @@ Changes not staged for commit:
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
 
-	arch/arm/dts/nova.dts
 	board/ti/nova/
+    board.c board.h MAINTAINERS Makefile mux.c u-boot.lds
+    FIX:
+    board/ti/nova/Kconfig if TARGET_NOVA
+
 	configs/nova_defconfig
 	include/configs/nova.h
 
-
-
-./arch/arm/dts/am335x-boneblack.dts
 make distclean
 make nova_defconfig
+
+???CONFIG_TIMESTAMP redefined???
+
+
+make
+=> MLO u-boot.img
+
+sh $MELP/format-sdcard.sh
+cp MLO u-boot.img /media/peter/boot
+
 
 # ---------------------
 # -- u-boot commandline
@@ -171,6 +201,7 @@ mount -t devpts devpts /dev/pts
 # ---------------------
 https://busybox.net/tinyutils.html
 
+poweroff
 
 # ---------------------
 # --  dropbear "2022_83"
@@ -303,27 +334,6 @@ bootz 0x80200000 - 0x80f00000
 -rwxr-xr-x  1 root root 9990656 Aug 12 15:24 zImage
 
 
-# ---------------------
-# -- fstab
-# ---------------------
-
-/dev/sdb1 on /media/peter/11WATT_0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
-/dev/sdc2 on /media/peter/STORAGE_Volume_11WATT type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
-/dev/sda4 on /media/peter/11WATT_SSD0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
-
-/dev/sdb1: LABEL="11WATT_0.5T" UUID="662872F92872C817" TYPE="ntfs" PARTUUID="0512b30a-01"
-/dev/sdc2: LABEL="STORAGE_Volume_11WATT" UUID="96604E02604DE997" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="5bd3007e-e68d-4eb0-a795-1fa2bcdc0a20"
-/dev/sda4: LABEL="11WATT_SSD0.5T" UUID="D2CA0BF4CA0BD39F" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="89a179fc-ca6b-468b-a2e9-63a04f4a2b57"
-
-/dev/sdb1: /mnt/backup_0.5t  UUID=662872F92872C817 ntfs
-/dev/sdc2: /mnt/storage_1.0t" UUID=96604E02604DE997 "ntfs
-/dev/sda4: /mnt/win_ssd0.5t" UUID=D2CA0BF4CA0BD39F ntfs
-
-/etc/fstab
-UUID=662872F92872C817 /mnt/backup_0.5t ntfs
-UUID=96604E02604DE997 /mnt/storage_1.0t ntfs
-UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
-
 
 # ---------------------
 # -- rootfs mount via NFS
@@ -362,6 +372,8 @@ setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 am3
 
 p. 641
 /sys/class
+
+
 
 # ################
 # ## buildroot "2023.02.3"
