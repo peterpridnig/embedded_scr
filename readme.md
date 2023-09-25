@@ -126,7 +126,16 @@ make
 => MLO u-boot.img
 
 sh $MELP/format-sdcard.sh
+lsblk
+umount /dev/sdh1
+
 cp MLO u-boot.img /media/peter/boot
+
+=>
+U-Boot 2023.07.02-00002-gab674ffb7e-dirty (Sep 24 2023 - 17:35:51 +0200)
+[...]
+Hit any key to stop autoboot:  0 
+nova!>    
 
 
 # ---------------------
@@ -143,12 +152,22 @@ reset
 
 U-Boot 2023.07.02-00001-g17c4ea4e9b (Aug 26 2023 - 15:57:19 +0200)
 
+print bootcmd
+
+boot 
+=> boot default (bootcmd)
+
 
 # ################
 # ## kernel linux 5.15.126
 # ################
 
-make ARCH=arm CROSS_COMPILE=arm-unknown-linux-gnueabi- mrproper
+https://www.kernel.org/
+
+wget ...?
+tar xf ...?
+
+make ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabi- mrproper
 make ARCH=arm multi_v7_defconfig
 make menuconfig
 
@@ -157,13 +176,19 @@ make menuconfig
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- zImage
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- modules
 make -j4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- dtbs
+(make ARCH=arm am335x-boneblack.dtb)
 
 =>
 arch/arm/boot/zImage
 arch/arm/boot/dts/am335x-boneblack.dtb
 
+cp arch/arm/boot/dts/am335x-boneblack.dts arch/arm/boot/dts/nova.dts
+make ARCH=arm nova.dtb
+=> arch/arm/boot/dts/nova.dtb
+
 # ---------------------
-# -- tftp to load the kernel
+# -- tftp to load the Kernel & DeviceTree
+# -- nfs to load rootfs
 # ---------------------
 
 sudo apt install tftpd-hpa
@@ -187,6 +212,9 @@ setenv bootargs console=ttyO0,115200 debug earlycon root=/dev/nfs rw nfsroot=${s
 
 setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
 
+setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 nova.dtb\;bootz 0x80200000 - 0x80f00000
+
+
 
 # ##################
 # ## rootfs
@@ -202,6 +230,7 @@ mount -t devpts devpts /dev/pts
 https://busybox.net/tinyutils.html
 
 poweroff
+reboot
 
 # ---------------------
 # --  dropbear "2022_83"
@@ -336,7 +365,7 @@ bootz 0x80200000 - 0x80f00000
 
 
 # ---------------------
-# -- rootfs mount via NFS
+# -- rootfs mount via NFS / Kernel & DeviceTree via mmc
 # ---------------------
 
 /etc/exports
