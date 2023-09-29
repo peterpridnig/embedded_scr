@@ -163,11 +163,16 @@ boot
 # ################
 
 https://www.kernel.org/
+https://en.wikipedia.org/wiki/Linux_kernel_version_history
 
 wget ...?
 tar xf ...?
 
-make ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabi- mrproper
+git branch
+* linux-5.15.y.peter
+  master
+
+make ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- mrproper
 make ARCH=arm multi_v7_defconfig
 make menuconfig
 
@@ -399,9 +404,94 @@ setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 am3
 # ## gpio
 # ################
 
-p. 641
-/sys/class
 
+pinctl information is avalable under /sys/kernel/debug/pinctrl/*
+To have it avalable your kernel must be configered for debugging and the debugfs must be mounted:
+CONFIG_DEBUG_KERNEL
+mount -t debugfs none /sys/kernel/debug
+
+http://derekmolloy.ie/gpios-on-the-beaglebone-black-using-device-tree-overlays/
+
+cd /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single
+
+# ---------------------
+# -- GPIO control
+# ---------------------
+e.g. Pin  14 on the P8 Header
+=> BB_Pinmux.ods
+
+=> GPIO0_26  = 0 x 32 + 26 = GPIO 26
+=> Offset 0x028, P8-14 GPIO0_26
+=> 44e10800+028 = 44e10828
+
+/sys/kernel/debug/pinctrl/44e10800.pinmux
+cat pins | grep 44e10828
+pin 10 (PIN10) 26:gpio-96-127 44e10828 00000027 pinctrl-single
+more gpio-ranges  | grep 10
+26: gpio-96-127 GPIOS [122 - 123] PINS [10 - 11]
+=> pin10 = gpio122
+
+Well to understand this you need the document to beat all documents – the AM3359 Technical Reference Manual. http://www.ti.com/product/am3359 and you can see the link for this document. The version I am using is called the “AM335x ARM Cortex-A8 Microprocessors (MPUs) Technical Reference Manual (Rev.H). It is a 18.5MB document with 4,727 pages (no typo there – 4,700 pages!). The current direct link is: http://www.ti.com/lit/ug/spruh73j/spruh73j.pdf
+
+
+Bit Description
+6   Slew Control
+5   Receiver active (0 for output, 1 for also input) 
+4   Pad Type Pullup=1/down=0
+3   Pad Enable Pullup/down
+2-0 mux select
+
+0x27 = 010 0111
+2-0 mmode=111 => muxmode=7
+3 pad pull disabled
+4 putypesel=0 => Pulldn
+5 rxactive=0 => Receiver disable = output
+
+cd /sys/class/gpio
+echo 122 > export
+
+cd gpio122
+sudo echo out > direction 
+sudo echo 1 > value
+sudo echo 0 > value
+
+cat pingroups = registered pingroups
+
+
+# ---------------------
+# -- DeviceTree configuration
+# ---------------------
+
+make ARCH=arm nova.dtb
+sudo cp arch/arm/boot/dts/nova.dtb  /var/lib/tftpboot/
+
+am335x-bone-common.dtsi
+&am33xx_pinmux {
+	[...]
+	/* P8  pin#12 GPIO0_26 */
+    mygpio1_pins_default: mygpio1_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x828, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (V16) gpmc_clk.gpio2[1] */
+		>;
+	};
+
+/ {
+	model = "Nova";
+	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
+
+
+  mygpio1_pins {
+   compatible = "gpio-keys";
+   /* compatible = "bone-pinmux-helper"; */
+   pinctrl-names = "default";
+   pinctrl-0 = <&mygpio1_pins_default>;
+   status = "okay";
+  };
+
+
+# ---------------------
+# -- LED control
+# ---------------------
 
 
 # ################
