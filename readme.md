@@ -165,6 +165,8 @@ boot
 https://www.kernel.org/
 https://en.wikipedia.org/wiki/Linux_kernel_version_history
 
+./linux-stable
+
 wget ...?
 tar xf ...?
 
@@ -385,6 +387,7 @@ sudo systemctl status nfs-kernel-server
 
 sudo ufw status
 
+fix rights in local target folder:
 sudo chown -R 0:0 *
 
 setenv serverip 10.0.0.18
