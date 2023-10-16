@@ -1,4 +1,7 @@
 
+echo export WORKAREA
+export WORKAREA=$(pwd)
+
 echo export MELP
 export MELP=~/mastering_beaglebone/Mastering-Embedded-Linux-Programming-Third-Edition/
 

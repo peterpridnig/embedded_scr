@@ -418,7 +418,7 @@ http://derekmolloy.ie/gpios-on-the-beaglebone-black-using-device-tree-overlays/
 cd /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single
 
 # ---------------------
-# -- GPIO control
+# -- GPIO control output
 # ---------------------
 e.g. Pin  14 on the P8 Header
 => BB_Pinmux.ods
@@ -462,34 +462,37 @@ cat pingroups = registered pingroups
 
 
 # ---------------------
-# -- DeviceTree configuration
+# -- DeviceTree configuration / GPIO control output
 # ---------------------
 
-make ARCH=arm nova.dtb
-sudo cp arch/arm/boot/dts/nova.dtb  /var/lib/tftpboot/
-
-am335x-bone-common.dtsi
+am335x-bone-common.dtsi :
 &am33xx_pinmux {
-	[...]
-	/* P8  pin#12 GPIO0_26 */
-    mygpio1_pins_default: mygpio1_pins_default {
+[..]
+	/* pullup */
+	mygpio1_pins_default: mygpio1_pins_default {
 		pinctrl-single,pins = <
-			AM33XX_IOPAD(0x828, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (V16) gpmc_clk.gpio2[1] */
+			AM33XX_IOPAD(0x88C, PIN_INPUT_PULLUP | MUX_MODE7) /* P8_18 GPIO33 */
 		>;
 	};
+[..]
 
+nova.dtb :
 / {
 	model = "Nova";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 
+	/* set input pins pullup */
+	mygpio1_pins {
+	compatible = "gpio-keys";
+	/* compatible = "bone-pinmux-helper"; */
+	pinctrl-names = "default";
+	pinctrl-0 = <&mygpio1_pins_default>;
+	status = "okay";
+	};
+};
 
-  mygpio1_pins {
-   compatible = "gpio-keys";
-   /* compatible = "bone-pinmux-helper"; */
-   pinctrl-names = "default";
-   pinctrl-0 = <&mygpio1_pins_default>;
-   status = "okay";
-  };
+make ARCH=arm nova.dtb
+sudo cp arch/arm/boot/dts/nova.dtb  /var/lib/tftpboot/
 
 
 # ---------------------
