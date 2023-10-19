@@ -198,6 +198,7 @@ make ARCH=arm nova.dtb
 # -- nfs to load rootfs
 # ---------------------
 
+SERVER TFTP:
 sudo apt install tftpd-hpa
 
 more /etc/default/tftpd-hpa 
@@ -212,6 +213,7 @@ cp arch/arm/boot/dts/am335x-boneblack.dtb /var/lib/tftpboot
 
 /etc/init.d/tftpd-hpa restart
 
+U-BOOT:
 setenv serverip 10.0.0.18
 setenv ipaddr 10.0.0.117
 setenv npath /home/peter/mastering_beaglebone/userland/rootfs_nfs
@@ -372,8 +374,11 @@ bootz 0x80200000 - 0x80f00000
 
 
 # ---------------------
-# -- rootfs mount via NFS / Kernel & DeviceTree via mmc
+# -- Kernel & DeviceTree via TFTP
+# -- rootfs mount via NFS 
 # ---------------------
+
+SERVER NFS:
 
 /etc/exports
  /home/peter/mastering_beaglebone/userland/rootfs_nfs *(rw,sync,no_subtree_check,no_root_squash)
@@ -389,6 +394,8 @@ sudo ufw status
 
 fix rights in local target folder:
 sudo chown -R 0:0 *
+
+U-BOOT:
 
 setenv serverip 10.0.0.18
 setenv ipaddr 10.0.0.117
@@ -499,6 +506,52 @@ sudo cp arch/arm/boot/dts/nova.dtb  /var/lib/tftpboot/
 # -- LED control
 # ---------------------
 
+
+
+# ################
+# ## UART
+# ################
+
+serial debug interface:
+ UART0
+ /dev/ttyS0
+
+/etc/inittab:
+ ::sysinit:/etc/init.d/rcS
+ ::respawn:/sbin/getty 115200 console <=REMOVE
+
+pin loopback / gtkterm
+ microcom -s 115200 /dev/ttyS0
+
+
+UART1
+UART1_TXD P9_24 0x184
+UART1_RXD P9_26 0x180
+
+~ # cat /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single/pins | grep 984
+pin 97 (PIN97) 15:gpio-96-127 44e10984 00000037 pinctrl-single 
+
+~ # cat /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single/pins | grep 980
+pin 96 (PIN96) 14:gpio-96-127 44e10980 00000037 pinctrl-single 
+
+=> pinmux = 7
+
+am335x-bone-common.dtsi :
+[..]
+	uart1_pins: pinmux_uart1_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_UART1_RXD, PIN_INPUT_PULLUP, MUX_MODE0)
+			AM33XX_PADCONF(AM335X_PIN_UART1_TXD, PIN_OUTPUT_PULLDOWN, MUX_MODE0)
+		>;
+	};
+[..]
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_pins>;
+
+	status = "okay";
+};
+[..]
 
 # ################
 # ## buildroot "2023.02.3"
