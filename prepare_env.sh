@@ -7,4 +7,4 @@ echo GTKTERM
 gtkterm -p /dev/ttyUSB2 -s 115200 &
 ls /dev/ttyUSB*
 
-emacs readme.md &
+#emacs readme.md &

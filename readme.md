@@ -299,7 +299,7 @@ if needed create /dev/random device
 Running dropbear server in foreground (on default port)
 ./dropbear
 
-Note: use -E option to log on sdterr
+Note: use -E option to log on stderr
 
 /etc/init.d/rcS
 dropbear -R -E -b dropbear -R -b /etc/dropbear/dropbear.banner
@@ -523,6 +523,9 @@ serial debug interface:
 pin loopback / gtkterm
  microcom -s 115200 /dev/ttyS0
 
+# ---------------------
+# -- I/O
+# ---------------------
 
 UART1
 UART1_TXD P9_24 0x184
@@ -552,6 +555,80 @@ am335x-bone-common.dtsi :
 	status = "okay";
 };
 [..]
+
+[    3.559772] 48022000.serial: ttyS1 at MMIO 0x48022000 (irq = 24, base_baud = 3000000) is a 8250
+[    5.813839] 44e09000.serial: ttyS0 at MMIO 0x44e09000 (irq = 18, base_baud = 3000000) is a 8250
+
+cat /sys/class/tty/ttyS1/dev
+4:65 (major:minor)
+
+echo peter > /dev/ttyS1
+microcom -s 115200 /dev/ttyS1
+
+microcom /dev/ttyS1
+
+
+# ---------------------
+# -- GPS
+ # ---------------------
+
+UART4
+UART4_TXD P9_13 0x074
+UART4_RXD P9_11 0x070
+
+~ # cat /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single/pins | grep 874
+pin 29 (PIN29) 31:gpio-96-127 44e10874 00000037 pinctrl-single 
+
+~ # cat /sys/kernel/debug/pinctrl/44e10800.pinmux-pinctrl-single/pins | grep 870
+pin 28 (PIN28) 30:gpio-96-127 44e10870 00000037 pinctrl-single 
+
+=> pinmux = 7
+
+am335x-bone-common.dtsi :
+[..]
+	uart4_pins: pinmux_uart4_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_GPMC_WAIT0, PIN_INPUT_PULLUP, MUX_MODE6)
+                        AM33XX_PADCONF(AM335X_PIN_GPMC_WPN, PIN_OUTPUT_PULLDOWN, MUX_MODE6)
+		>;
+	};
+[..]
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
+
+	status = "okay";
+};
+[..]
+
+www.ti.com
+https://dev.ti.com/sysconfig/#/start
+
+GPS-Baudrate: 9600
+microcom /dev/ttyS4
+microcom -s 9600 /dev/ttyS4
+
+nmea parser: https://github.com/kosma/minmea
+
+# ################
+# ## I2C
+# ################
+
+i2cdetect -l
+
+i2c-2   i2c             OMAP I2C adapter                        I2C adapter
+i2c-0   i2c             OMAP I2C adapter                        I2C adapter
+
+I2C interface #2
+i2c2_pins: pinmux_i2c2_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_UART1_CTSN, PIN_INPUT_PULLUP, MUX_MODE3)	/* uart1_ctsn.i2c2_sda */
+			AM33XX_PADCONF(AM335X_PIN_UART1_RTSN, PIN_INPUT_PULLUP, MUX_MODE3)	/* uart1_rtsn.i2c2_scl */
+		>;
+	};
+
+ i2cdetect -y -r 2
+
 
 # ################
 # ## buildroot "2023.02.3"
