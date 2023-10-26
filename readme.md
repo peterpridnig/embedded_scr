@@ -53,10 +53,10 @@ git status
 
 
 git remote -v
-git remote add pb https://github.com/paulboone/ticgit
+git remote add scr https://github.com/peterpridnig/scr
 
-git fetch pb
-git push pb
+git fetch scr
+git push scr
 
 git push origin master
 (origin=remote, master=branch)
@@ -64,7 +64,11 @@ git push origin master
 git remote show origin
 
 
+github fine grained token
+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
 
+github personal access token
+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
 
 # #######################
 # ## toolchain "master" -> remotes/origin.1.25
