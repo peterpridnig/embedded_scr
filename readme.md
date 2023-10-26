@@ -1,5 +1,18 @@
 # pridnig, 22.8.2023
 
+# ---------------------
+# -- Serial2USB
+# ---------------------
+
+lsusb
+Bus 001 Device 015: ID 0403:6001 Future Technology Devices International, Ltd FT232 USB-Serial (UART) IC
+Bus 001 Device 016: ID 0403:6001 Future Technology Devices International, Ltd FT232 USB-Serial (UART) IC
+2
+peter@elvwatt:~$ ls -al /dev/serial/by-id/
+Debug console:
+lrwxrwxrwx 1 root root  13 Oct 26 10:47 usb-FTDI_FT232R_USB_UART_A50285BI-if00-port0 -> ../../ttyUSB1
+Serial I/O
+lrwxrwxrwx 1 root root  13 Oct 26 10:48 usb-FTDI_FT232R_USB_UART_A50285BI-if00-port0 -> ../../ttyUSB0
 
 # ---------------------
 # -- fstab
@@ -22,7 +35,33 @@ UUID=662872F92872C817 /mnt/backup_0.5t ntfs
 UUID=96604E02604DE997 /mnt/storage_1.0t ntfs
 UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
 
+# ---------------------
+# -- GIT
+# ---------------------
 
+git log -n 3
+
+$ git commit -m 'initial commit'
+$ git add forgotten_file
+$ git commit --amend
+
+You end up with a single commit – the second commit replaces the results of the first.
+
+Undo last commit
+git checkout -- CONTRIBUTING.md
+git status
+
+
+git remote -v
+git remote add pb https://github.com/paulboone/ticgit
+
+git fetch pb
+git push pb
+
+git push origin master
+(origin=remote, master=branch)
+
+git remote show origin
 
 
 
