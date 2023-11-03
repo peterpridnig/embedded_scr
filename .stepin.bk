@@ -1,0 +1,54 @@
+#!/bin/sh
+
+echo stepping into $(pwd)
+
+
+# VARIABES
+
+echo export WORKAREA
+export WORKAREA=$(pwd)
+
+echo export SCR
+export SCR=$WORKAREA/scr
+
+echo export USERLAND
+export USERLAND=$WORKAREA/userland
+
+echo export CROSS_COMPILE
+export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
+
+echo export CC
+export CC=${CROSS_COMPILE}gcc
+
+echo export ARCH
+export ARCH=arm
+
+echo export TFTPBOOT
+export TFTPBOOT=/var/lib/tftpboot/
+
+
+#ALIAS
+
+echo alias cdwa
+alias cdwa='cd $WORKAREA'
+
+echo alias cdscr
+alias cdscr='cd $WORKAREA/scr'
+
+echo alias cddoc
+alias cddoc='cd $WORKAREA/doc'
+
+
+#PATH
+
+echo enhance PATH
+PATH=${HOME}/x-tools/arm-cortex_a8-linux-gnueabihf/bin/:${WORKAREA}/scr:$PATH
+
+#VARIABLES/2
+echo export SYSROOT
+export SYSROOT=$(arm-cortex_a8-linux-gnueabihf-gcc -print-sysroot)
+
+
+#cd ${SCR} && ./prepare_env.sh && cd ${WORKAREA}
+
+cd ${WORKAREA}

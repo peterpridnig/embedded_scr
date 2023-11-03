@@ -1,0 +1,109 @@
+#!/bin/bash
+
+echo stepping into $(pwd)
+
+######################
+### COMMON
+######################
+echo "Common: "
+
+    # VARIABES
+
+    echo export WORKAREA
+    export WORKAREA=$(pwd)
+
+    echo export SCR
+    export SCR=$WORKAREA/scr
+
+    echo export USERLAND
+    export USERLAND=$WORKAREA/userland
+
+    echo export ARCH
+    export ARCH=arm
+
+    echo export TFTPBOOT
+    export TFTPBOOT=/var/lib/tftpboot/
+
+    #ALIAS
+
+    echo alias cdwa
+    alias cdwa='cd $WORKAREA'
+
+    echo alias cdscr
+    alias cdscr='cd $WORKAREA/scr'
+
+    echo alias cddoc
+    alias cddoc='cd $WORKAREA/doc'
+    
+######################
+### TARGET
+######################
+
+echo "Select: "
+echo "r ...roll your own"
+echo "b ...buildroot"
+read -r choice
+
+
+######################
+### roll your own
+######################
+
+if [[ $choice = "r" ]]
+then
+    echo "selected Roll Your Own"
+
+    # VARIABES
+    
+    echo export CROSS_COMPILE
+    export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
+
+    echo export CC
+    export CC=${CROSS_COMPILE}gcc
+    
+    #PATH
+
+    echo enhance PATH
+    PATH=${HOME}/x-tools/arm-cortex_a8-linux-gnueabihf/bin/:${WORKAREA}/scr:$PATH
+
+    #VARIABLES/2
+    echo export SYSROOT
+    export SYSROOT=$(arm-cortex_a8-linux-gnueabihf-gcc -print-sysroot)
+    
+    PS1=RYO:$PS1
+    
+######################
+### buildroot
+######################
+    
+elif [[ $choice = "b" ]]
+then
+    echo "selected Buildroot"
+
+    # VARIABES
+    
+    echo export CROSS_COMPILE
+    export CROSS_COMPILE=arm-buildroot-linux-gnueabihf-
+    
+    #PATH
+
+    echo enhance PATH
+    PATH=$WORKAREA/buildroot/output/host/bin/:$WORKAREA/scr:$PATH
+    
+    #VARIABLES/2
+    echo export SYSROOT
+    export SYSROOT=$(arm-buildroot-linux-gnueabihf-gcc -print-sysroot)
+    
+    PS1=BUILDROOT:$PS1
+    
+else
+    
+    echo "unknown choice, exiting..."
+    exit 1
+fi    
+
+
+cd ${WORKAREA}
+
+
+
