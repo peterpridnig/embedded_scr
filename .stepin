@@ -1,9 +1,13 @@
 #!/bin/bash
 
+######################
+## pridnig, 24.11.2023
+######################
+
 echo stepping into $(pwd)
 
 ######################
-### COMMON
+### COMMON part 1
 ######################
 echo "Common: "
 
@@ -34,9 +38,16 @@ echo "Common: "
 
     echo alias cddoc
     alias cddoc='cd $WORKAREA/doc'
+
+    echo alias cduserland
+    alias cduserland='cd $WORKAREA/userland'
+
+    echo alias cdcode
+    alias cdcode='cd $WORKAREA/userland/code'
+    
     
 ######################
-### TARGET
+### TARGET selection
 ######################
 
 echo "Select: "
@@ -99,12 +110,20 @@ else
     exit 1
 fi    
 
-    #VARIABLES/3
+######################
+### COMMON part 2
+######################
 
     echo export CC
     export CC=${CROSS_COMPILE}gcc
 
+    echo export CPP
+    export CPP=${CROSS_COMPILE}g++
+
 cd ${WORKAREA}
 
 
+#shell extension "under construction"
+#sh
+#export PS1="\h [\w] $ "
 
